@@ -24,7 +24,7 @@
 
 ## Как собрать и прошить прошивку
 
-Для сборки необходима библиотека [LUFA](http://www.fourwalledcubicle.com/LUFA.php) и компилятор [WinAVR](http://winavr.sourceforge.net/), но скомпилированная прошика уже есть в репозитории.
+Для сборки необходима библиотека [LUFA](http://www.fourwalledcubicle.com/LUFA.php) и компилятор [WinAVR](http://winavr.sourceforge.net/), но скомпилированная прошика уже есть в репозитории - "[nessmd2usb.hex](nessmd2usb.hex)".
 Прошивается микроконтроллер прямо по USB приложением [FLIP](http://www.atmel.com/tools/FLIP.aspx). Для перевода устройства в режим прошивки нужно замкнуть вывод "reset" на землю.
 
 
