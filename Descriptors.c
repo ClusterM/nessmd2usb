@@ -46,13 +46,6 @@
  
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM JoystickReport[] =
 {
-	/* Use the HID class driver's standard Joystick report.
-	 *   Min X/Y/Z Axis values: -100
-	 *   Max X/Y/Z Axis values:  100
-	 *   Min physical X/Y/Z Axis values (used to determine resolution): -1
-	 *   Max physical X/Y/Z Axis values (used to determine resolution):  1
-	 *   Buttons: 2
-	 */
 	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 8, 1),
 	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 8, 2),
 	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 4, 3),
