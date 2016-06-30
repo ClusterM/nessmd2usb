@@ -94,9 +94,9 @@
 			HID_RI_USAGE_PAGE(8, 0x01),                     \
 			HID_RI_USAGE(8, 0x04),                          \
 			HID_RI_COLLECTION(8, 0x01),                     \
+				HID_RI_REPORT_ID(8, ReportId),		\
 				HID_RI_USAGE(8, 0x01),                      \
 				HID_RI_COLLECTION(8, 0x00),                 \
-					HID_RI_REPORT_ID(8, ReportId),		\
 					HID_RI_USAGE(8, 0x30),                  \
 					HID_RI_USAGE(8, 0x31),                  \
 					HID_RI_LOGICAL_MINIMUM(16, MinAxisVal), \
