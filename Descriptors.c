@@ -35,6 +35,7 @@
  *  the device's capabilities and functions.
  */
 
+#include "defines.h"
 #include "Descriptors.h"
 
 /** HID class report descriptor. This is a special descriptor constructed with values from the
@@ -46,10 +47,17 @@
  
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM JoystickReport[] =
 {
-	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 8, 1),
-	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 8, 2),
-	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 4, 3),
-	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 4, 4)
+#ifndef LINUX_WORKAROUND
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x30, 0x31, 8, 1),
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x30, 0x31, 8, 2),
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x30, 0x31, 4, 3),
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x30, 0x31, 4, 4)
+#else
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x30, 0x31, 8, 1),
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x32, 0x33, 8, 2),
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x34, 0x35, 4, 3),
+	HID_DESCRIPTOR_JOYSTICK_MY(-100, 100, -1, 1, 0x36, 0x37, 4, 4)
+#endif
 };
 
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall

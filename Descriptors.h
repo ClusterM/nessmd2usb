@@ -90,15 +90,15 @@
 		                                    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
   
-#define HID_DESCRIPTOR_JOYSTICK_MY(MinAxisVal, MaxAxisVal, MinPhysicalVal, MaxPhysicalVal, Buttons, ReportId) \
+#define HID_DESCRIPTOR_JOYSTICK_MY(MinAxisVal, MaxAxisVal, MinPhysicalVal, MaxPhysicalVal, AxisAtype, AxisBtype, Buttons, ReportId) \
 			HID_RI_USAGE_PAGE(8, 0x01),                     \
 			HID_RI_USAGE(8, 0x04),                          \
 			HID_RI_COLLECTION(8, 0x01),                     \
 				HID_RI_REPORT_ID(8, ReportId),		\
 				HID_RI_USAGE(8, 0x01),                      \
 				HID_RI_COLLECTION(8, 0x00),                 \
-					HID_RI_USAGE(8, 0x30),                  \
-					HID_RI_USAGE(8, 0x31),                  \
+					HID_RI_USAGE(8, AxisAtype),                  \
+					HID_RI_USAGE(8, AxisBtype),                  \
 					HID_RI_LOGICAL_MINIMUM(16, MinAxisVal), \
 					HID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal), \
 					HID_RI_PHYSICAL_MINIMUM(16, MinPhysicalVal), \

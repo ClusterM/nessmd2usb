@@ -28,3 +28,5 @@
 #define LED_PORT B
 #define LED_RED_PIN 6
 #define LED_GREEN_PIN 7
+
+//#define LINUX_WORKAROUND
