@@ -16,6 +16,7 @@
 #define SMD_DATA3_PIN2 3
 #define SMD_DATA4_PIN2 4
 #define SMD_DATA5_PIN2 5
+#define SMD_USE_DENDY9_PIN
 
 #define NES_ENABLED
 #define NES_SECOND_ENABLED

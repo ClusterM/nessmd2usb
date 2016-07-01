@@ -5,7 +5,6 @@
 #include "bits.h"
 
 #ifdef NES_ENABLED
-
 void init_nes_gamepad()
 {
 	NES_PORT_DDR |= 1<<NES_LATCH_PIN; // Latch, output
@@ -22,6 +21,7 @@ uint16_t get_nes_gamepad()
 {
 	uint16_t gamepad_data = 0;
 	NES_PORT_PORT &= ~(1<<NES_LATCH_PIN); // Latch
+	_delay_us(10);
 	int b;
 	for (b = 0; b < 8; b++)
 	{
@@ -162,7 +162,7 @@ uint32_t get_smd_gamepad()
 		| (((SMD_DATA_PORT_PIN>>SMD_DATA3_PIN)&1)<<3)
 		| (((SMD_DATA_PORT_PIN>>SMD_DATA4_PIN)&1)<<4)
 		| (((SMD_DATA_PORT_PIN>>SMD_DATA5_PIN)&1)<<5);
-#ifdef SMD_SECOND_ENABLED		
+#ifdef SMD_SECOND_ENABLED
 	gamepad_data_high2 = ((SMD_DATA_PORT_PIN2>>SMD_DATA0_PIN2)&1) 
 		| (((SMD_DATA_PORT_PIN2>>SMD_DATA1_PIN2)&1)<<1) 
 		| (((SMD_DATA_PORT_PIN2>>SMD_DATA2_PIN2)&1)<<2)
@@ -174,14 +174,79 @@ uint32_t get_smd_gamepad()
 }
 #endif
 
+#ifdef SMD_USE_DENDY9_PIN
+void init_dendy_9pin(uint8_t n)
+{ // 3, 4, 6
+	if (!n)
+	{
+		SMD_DATA_PORT_DDR &= ~(1<<SMD_DATA1_PIN); // Data 1 aka data, input
+		SMD_DATA_PORT_DDR |= 1<<SMD_DATA2_PIN; // Data 2 aka latch, output
+		SMD_DATA_PORT_DDR |= 1<<SMD_DATA3_PIN; // Data 3 aka clock, output
+		SMD_DATA_PORT_DDR |= 1<<SMD_DATA4_PIN; // Data 4 aka VCC, output
+		SMD_DATA_PORT_PORT |= 1<<SMD_DATA1_PIN; // Data 1 aka data, pull-up
+		SMD_DATA_PORT_PORT |= 1<<SMD_DATA2_PIN; // Data 2 aka latch, hi
+		SMD_DATA_PORT_PORT |= 1<<SMD_DATA3_PIN; // Data 3 aka clock, hi
+		SMD_DATA_PORT_PORT |= 1<<SMD_DATA4_PIN; // Data 4 aka VCC, hi
+	} else {
+#ifdef SMD_SECOND_ENABLED
+		SMD_DATA_PORT_DDR2 &= ~(1<<SMD_DATA1_PIN2); // Data 1 aka data, input
+		SMD_DATA_PORT_DDR2 |= 1<<SMD_DATA2_PIN2; // Data 2 aka latch, output
+		SMD_DATA_PORT_DDR2 |= 1<<SMD_DATA3_PIN2; // Data 3 aka clock, output
+		SMD_DATA_PORT_DDR2 |= 1<<SMD_DATA4_PIN2; // Data 4 aka VCC, output
+		SMD_DATA_PORT_PORT2 |= 1<<SMD_DATA1_PIN2; // Data 1 aka data, pull-up
+		SMD_DATA_PORT_PORT2 |= 1<<SMD_DATA2_PIN2; // Data 2 aka latch, hi
+		SMD_DATA_PORT_PORT2 |= 1<<SMD_DATA3_PIN2; // Data 3 aka clock, hi
+		SMD_DATA_PORT_PORT2 |= 1<<SMD_DATA4_PIN2; // Data 4 aka VCC, hi
+#endif
+	}
+}
+
+uint8_t get_dendy_9pin(uint8_t n)
+{
+	uint8_t gamepad_data = 0;
+	if (!n)
+	{
+		SMD_DATA_PORT_PORT &= ~(1<<SMD_DATA2_PIN); // Data 2 aka latch, low
+		_delay_us(10);
+		int b;
+		for (b = 0; b < 8; b++)
+		{
+			SMD_DATA_PORT_PORT &= ~(1<<SMD_DATA3_PIN); // Data 3 aka clock, low
+			_delay_us(10);
+			gamepad_data |= (((SMD_DATA_PORT_PIN>>SMD_DATA1_PIN)&1)<<b);
+			SMD_DATA_PORT_PORT |= 1<<SMD_DATA3_PIN; // Data 3 aka clock, hi
+			_delay_us(10);
+		}		
+		SMD_DATA_PORT_PORT |= 1<<SMD_DATA2_PIN; // Data 2 aka latch, hi
+	} else {
+#ifdef SMD_SECOND_ENABLED
+		SMD_DATA_PORT_PORT2 &= ~(1<<SMD_DATA2_PIN2); // Data 2 aka latch, low
+		_delay_us(10);
+		int b;
+		for (b = 0; b < 8; b++)
+		{
+			SMD_DATA_PORT_PORT2 &= ~(1<<SMD_DATA3_PIN2); // Data 3 aka clock, low
+			_delay_us(10);
+			gamepad_data |= (((SMD_DATA_PORT_PIN2>>SMD_DATA1_PIN2)&1)<<b);
+			SMD_DATA_PORT_PORT2 |= 1<<SMD_DATA3_PIN2; // Data 3 aka clock, hi
+			_delay_us(10);
+		}		
+		SMD_DATA_PORT_PORT2 |= 1<<SMD_DATA2_PIN2; // Data 2 aka latch, hi
+#endif
+	}
+	return gamepad_data;
+}
+#endif
+
 uint32_t get_smd_gamepad_decoded(void)
 {
 	uint32_t result = 0;
+	uint8_t smd_detected[2] = {0, 0};
 	uint8_t b, c, d;	
 	for (c = 0; c < 4; c++)
 	{
 		uint32_t smd_gamepad_data = get_smd_gamepad();
-		for (d = 0; d < 2; d++)
+		for (d = 0; d < 2; d++) // for each controller
 		{			
 			if ((smd_gamepad_data & 0b00001111) || (c < 2)) // 3-button mode
 			{
@@ -196,6 +261,10 @@ uint32_t get_smd_gamepad_decoded(void)
 								break;
 							case 1: // Down
 								set_bit(result, 9 + d*16);
+								break;
+							case 2: // always low
+							case 3:
+								smd_detected[d] = 1;
 								break;
 							case 4: // A
 								set_bit(result, 0 + d*16);
@@ -250,6 +319,25 @@ uint32_t get_smd_gamepad_decoded(void)
 			smd_gamepad_data >>= 16;
 		}
 	}
+	if (!smd_detected[0] || !smd_detected[1]) // SMD gamepad is not connected?
+	{
+#ifdef SMD_USE_DENDY9_PIN
+		// so maybe it's 9-pin dendy gamepad?
+		for (d = 0; d < 2; d++)
+		{
+			if (!smd_detected[d])
+			{
+				init_dendy_9pin(d);
+				_delay_us(50);
+				uint32_t dendy_data = ~get_dendy_9pin(d);
+				result &= ~(0xFFFFUL << (d*16));
+				result |= ((dendy_data & 0x0F) | ((dendy_data & 0xF0) << 4)) << (16*d);
+			}
+		}
+		init_smd_gamepad(); // back to SMD mode
+#endif
+	}
+
 	return result;
 }
 
@@ -260,19 +348,26 @@ void init_dualshock_gamepad()
 	DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_COMMAND_PIN); // Command pin - login high
 	DUALSHOCK_PORT_DDR &= ~(1<<DUALSHOCK_DATA_PIN);   // Data pin - input
 	DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_DATA_PIN);   // Data pin - pull-up
-	DUALSHOCK_PORT_DDR |= (1<<DUALSHOCK_ATTENTION_PIN); // Attention - output
-	DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_ATTENTION_PIN); // Attention - logic high	
 	DUALSHOCK_PORT_DDR |= (1<<DUALSHOCK_CLOCK_PIN);   // Clock - output
 	DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_CLOCK_PIN);  // Clock - logic high	
+	DUALSHOCK_ATTENTION_DDR |= (1<<DUALSHOCK_ATTENTION_PIN); // Attention - output
+	DUALSHOCK_ATTENTION_PORT |= (1<<DUALSHOCK_ATTENTION_PIN); // Attention - logic high	
+#ifdef DUALSHOCK_SECOND_ENABLED
+	DUALSHOCK_ATTENTION_DDR |= (1<<DUALSHOCK_ATTENTION_PIN2); // Attention 2 - output
+	DUALSHOCK_ATTENTION_PORT |= (1<<DUALSHOCK_ATTENTION_PIN2); // Attention 2 - logic high	
+#endif
 	/*
 	DUALSHOCK_PORT_DDR &= ~(1<<DUALSHOCK_ACK_PIN);   // Ack pin - input
 	DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_ACK_PIN);   // Ack pin - pull-up
 	*/
 }
 
-int dualshock_command(uint8_t* command, uint8_t* data, int length)
+int dualshock_command(uint8_t* command, uint8_t* data, int length, uint8_t controller_number)
 {
-	DUALSHOCK_PORT_PORT &= ~(1<<DUALSHOCK_ATTENTION_PIN); // Attention!
+	if (!controller_number)
+		DUALSHOCK_ATTENTION_PORT &= ~(1<<DUALSHOCK_ATTENTION_PIN); // Attention!
+	else
+		DUALSHOCK_ATTENTION_PORT &= ~(1<<DUALSHOCK_ATTENTION_PIN2); // Attention!
 	_delay_us(20);
 	int b, bit;
 	for (b = 0; b < length; b++) // Each byte...
@@ -292,7 +387,10 @@ int dualshock_command(uint8_t* command, uint8_t* data, int length)
 		}
 		if (b == 1 && data[1] == 0xFF) // Alternative device detection
 		{
-			DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_ATTENTION_PIN);  // No attention...
+			if (!controller_number)	
+				DUALSHOCK_ATTENTION_PORT |= (1<<DUALSHOCK_ATTENTION_PIN);  // No attention...
+			else
+				DUALSHOCK_ATTENTION_PORT |= (1<<DUALSHOCK_ATTENTION_PIN2);  // No attention...
 			return 0;
 		}
 		/*
@@ -312,35 +410,38 @@ int dualshock_command(uint8_t* command, uint8_t* data, int length)
 		}
 		*/
 	}
-	DUALSHOCK_PORT_PORT |= (1<<DUALSHOCK_ATTENTION_PIN);  // No attention...
+	if (!controller_number)	
+		DUALSHOCK_ATTENTION_PORT |= (1<<DUALSHOCK_ATTENTION_PIN);  // No attention...
+	else
+		DUALSHOCK_ATTENTION_PORT |= (1<<DUALSHOCK_ATTENTION_PIN2);  // No attention...
 	_delay_us(20);
 	return 1;
 }
 
-int get_dualshock_gamepad(uint8_t* data, int size, uint8_t motor_small, uint8_t motor_large) // pointer to uint8_t[21], number of bytes to request, vibration...
+int get_dualshock_gamepad(uint8_t* data, int size, uint8_t motor_small, uint8_t motor_large, uint8_t controller_number) // pointer to uint8_t[21], number of bytes to request, vibration...
 {
-	static char dualshock_configered = 0;
+	static uint8_t dualshock_configered[2] = {0, 0};
 
 	uint8_t command_query[21] = {0x01, 0x42, 0, motor_small, motor_large, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-	if (!dualshock_command(command_query, data, size))
+	if (!dualshock_command(command_query, data, size, controller_number))
 	{
-		dualshock_configered = 0;
+		dualshock_configered[controller_number] = 0;
 		return 0;
 	}
-	if (!dualshock_configered) // Need to reconfigure dualshock
+	if (!dualshock_configered[controller_number]) // Need to reconfigure dualshock
 	{
 		uint8_t command_config_mode[5] = {0x01, 0x43, 0x00, 0x01, 0x00};
-		if (!dualshock_command(command_config_mode, data, sizeof(command_config_mode))) return 0;
+		if (!dualshock_command(command_config_mode, data, sizeof(command_config_mode), controller_number)) return 0;
 		uint8_t command_analog_mode[9] = {0x01, 0x44, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00};
-		if (!dualshock_command(command_analog_mode, data, sizeof(command_analog_mode))) return 0;
+		if (!dualshock_command(command_analog_mode, data, sizeof(command_analog_mode), controller_number)) return 0;
 		uint8_t command_config_motors[9] = {0x01, 0x4D, 0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF};
-		if (!dualshock_command(command_config_motors, data, sizeof(command_config_motors))) return 0;
+		if (!dualshock_command(command_config_motors, data, sizeof(command_config_motors), controller_number)) return 0;
 		uint8_t command_config_pressure[9] = {0x01, 0x4F, 0x00, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00};
-		if (!dualshock_command(command_config_pressure, data, sizeof(command_config_pressure))) return 0;
+		if (!dualshock_command(command_config_pressure, data, sizeof(command_config_pressure), controller_number)) return 0;
 		uint8_t command_config_mode_exit[8] = {0x01, 0x43, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
-		if (!dualshock_command(command_config_mode_exit, data, sizeof(command_config_mode_exit))) return 0;
-		dualshock_configered = 1;
-		if (!dualshock_command(command_query, data, size)) return 0;
+		if (!dualshock_command(command_config_mode_exit, data, sizeof(command_config_mode_exit), controller_number)) return 0;
+		dualshock_configered[controller_number] = 1;
+		if (!dualshock_command(command_query, data, size, controller_number)) return 0;
 	}
 	return 1;
 }
