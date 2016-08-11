@@ -10,16 +10,24 @@ void init_nes_gamepad()
 	NES_PORT_DDR |= 1<<NES_LATCH_PIN; // Latch, output
 	NES_PORT_DDR |= 1<<NES_CLOCK_PIN; // Clock, output
 	NES_PORT_DDR &= ~(1<<NES_DATA_PIN); // Data, input
-#ifdef NES_SECOND_ENABLED	
 	NES_PORT_PORT |= 1<<NES_DATA_PIN; // Data, pull-up
+#ifdef NES_SECOND_ENABLED	
 	NES_PORT_DDR &= ~(1<<NES_DATA_PIN2); // Data, input
 	NES_PORT_PORT |= 1<<NES_DATA_PIN2; // Data, pull-up
 #endif
+#ifdef NES_THIRD_ENABLED	
+	NES_PORT_DDR &= ~(1<<NES_DATA_PIN3); // Data, input
+	NES_PORT_PORT |= 1<<NES_DATA_PIN3; // Data, pull-up
+#endif
+#ifdef NES_FORTH_ENABLED	
+	NES_PORT_DDR &= ~(1<<NES_DATA_PIN4); // Data, input
+	NES_PORT_PORT |= 1<<NES_DATA_PIN4; // Data, pull-up
+#endif
 }
 
-uint16_t get_nes_gamepad()
+uint32_t get_nes_gamepad()
 {
-	uint16_t gamepad_data = 0;
+	uint32_t gamepad_data = 0;
 	NES_PORT_PORT &= ~(1<<NES_LATCH_PIN); // Latch
 	_delay_us(10);
 	int b;
@@ -29,7 +37,13 @@ uint16_t get_nes_gamepad()
 		_delay_us(10);
 		gamepad_data |= (((NES_PORT_PIN>>NES_DATA_PIN)&1)<<b);
 #ifdef NES_SECOND_ENABLED
-		gamepad_data |= (((NES_PORT_PIN>>NES_DATA_PIN2)&1)<<b) * 0x100;
+		gamepad_data |= (uint32_t)(((NES_PORT_PIN>>NES_DATA_PIN2)&1)<<b) << 8;
+#endif
+#ifdef NES_THIRD_ENABLED
+		gamepad_data |= (uint32_t)(((NES_PORT_PIN>>NES_DATA_PIN3)&1)<<b) << 16;
+#endif
+#ifdef NES_FORTH_ENABLED
+		gamepad_data |= (uint32_t)(((NES_PORT_PIN>>NES_DATA_PIN4)&1)<<b) << 24;
 #endif
 		NES_PORT_PORT |= 1<<NES_CLOCK_PIN; // Clock
 		_delay_us(10);
@@ -39,9 +53,9 @@ uint16_t get_nes_gamepad()
 }
 #endif
 
-uint16_t get_nes_gamepad_decoded(void)
+uint32_t get_nes_gamepad_decoded(void)
 {
-	return get_nes_gamepad() ^ 0xFFFF;
+	return ~get_nes_gamepad();
 }
 
 #ifdef SNES_ENABLED

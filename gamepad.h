@@ -43,8 +43,8 @@
 #define N64SIGNAL (!((N64_PORT_PIN>>N64_DATA_PIN)&1))
 
 void init_nes_gamepad(void);
-uint16_t get_nes_gamepad(void);
-uint16_t get_nes_gamepad_decoded(void);
+uint32_t get_nes_gamepad(void);
+uint32_t get_nes_gamepad_decoded(void);
 void init_snes_gamepad(void);
 uint16_t get_snes_gamepad(void);
 void init_n64_gamepad(void);
