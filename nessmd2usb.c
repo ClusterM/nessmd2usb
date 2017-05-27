@@ -47,7 +47,7 @@ int main(void)
 
 	GlobalInterruptEnable();
 			
-	int c;
+	uint16_t c;
 
 	for (;;)
 	{	

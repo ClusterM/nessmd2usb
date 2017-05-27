@@ -28,6 +28,8 @@ void init_nes_gamepad()
 uint32_t get_nes_gamepad()
 {
 	uint32_t gamepad_data = 0;
+	NES_PORT_PORT |= 1<<NES_LATCH_PIN; // Latch
+	_delay_us(10);
 	NES_PORT_PORT &= ~(1<<NES_LATCH_PIN); // Latch
 	_delay_us(10);
 	int b;
@@ -48,7 +50,6 @@ uint32_t get_nes_gamepad()
 		NES_PORT_PORT |= 1<<NES_CLOCK_PIN; // Clock
 		_delay_us(10);
 	}		
-	NES_PORT_PORT |= 1<<NES_LATCH_PIN; // Latch
 	return gamepad_data;
 }
 #endif
