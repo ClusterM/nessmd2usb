@@ -9,4 +9,4 @@ This adapter allows to connect Sega Mega Drive (Sega Genesis) and Famiclone (9-p
 
 Schematic:
 
-![Плата](scematic/scematic.png)
+![Schematic](scematic/scematic.png)
