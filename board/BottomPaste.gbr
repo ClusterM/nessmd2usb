@@ -1,7 +1,7 @@
 G04 DipTrace 4.0.0.5*
-G04 BottomSilk.gbr*
+G04 BottomPaste.gbr*
 %MOIN*%
-G04 #@! TF.FileFunction,Legend,Bot*
+G04 #@! TF.FileFunction,Paste,Bot*
 G04 #@! TF.Part,Single*
 %FSLAX26Y26*%
 G04*
@@ -9,6 +9,6 @@ G70*
 G90*
 G75*
 G01*
-G04 BotSilk*
+G04 BotPaste*
 %LPD*%
 M02*
